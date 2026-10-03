@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon MSK - Managed Streaming for Apache Kafka | Event Streaming Console</title>
+  <meta name="description" content="Enterprise Event Streaming Platform and Control Console for Amazon MSK Managed Apache Kafka. Monitor clusters, publish events, inspect real-time streams, and track consumer lag.">
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top Navigation / AWS Global Header -->
+  <header class="aws-navbar" id="global-header">
+    <div class="nav-brand-section">
+      <div class="aws-logo-icon">
+        <svg viewBox="0 0 40 40" width="30" height="30" fill="none">
+          <rect width="40" height="40" rx="8" fill="#1E293B"/>
+          <path d="M12 28C15 30 25 30 28 28" stroke="#FF9900" stroke-width="3" stroke-linecap="round"/>
+          <path d="M29 27L28 28L29 29" stroke="#FF9900" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10 16L18 20L10 24V16Z" fill="#00F2FE"/>
+          <path d="M20 12L30 17L20 22V12Z" fill="#38BDF8"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-sub">AWS CLOUD SERVICES</div>
+        <div class="brand-title">Amazon MSK <span>Managed Kafka</span></div>
+      </div>
+      <div class="cluster-badge">
+        <span class="status-dot pulsing"></span>
+        <span class="cluster-name" id="cluster-name-display">msk-prod-eventstream-01</span>
+        <span class="tag-version">Kafka v3.6.0 (KRaft)</span>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Ticker -->
+    <div class="nav-telemetry">
+      <div class="telemetry-pill">
+        <span class="label">STATUS</span>
+        <span class="value success">ACTIVE</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="label">BROKERS</span>
+        <span class="value" id="nav-broker-count">3 / 3 In-Sync</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="label">INGRESS</span>
+        <span class="value cyan" id="nav-ingress-rate">1,420 msgs/s</span>
+      </div>
+      <div class="telemetry-pill" id="backend-status-pill">
+        <span class="label">BACKEND</span>
+        <span class="value success" id="backend-status-text">CONNECTING...</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="label">REGION</span>
+        <span class="value orange">us-east-1</span>
+      </div>
+    </div>
+
+    <!-- Quick Action Controls -->
+    <div class="nav-actions">
+      <button class="btn-sound-toggle" id="btn-toggle-sound" title="Toggle Futuristic Ambient Audio & Sound Effects">
+        <span id="sound-icon">🔈</span> Sound: OFF
+      </button>
+      <button class="btn-autopilot" id="btn-start-autopilot" title="Launch complete automated workflow demonstration">
+        <span class="autopilot-pulse"></span>
+        <span id="autopilot-btn-text">🎬 Start Guided Tour</span>
+      </button>
+      <button class="btn-traffic-toggle" id="btn-toggle-stream-sim" title="Toggle automatic background event generator">
+        <span class="sim-icon">⚡</span>
+        <span id="traffic-toggle-text">Simulate Traffic: ON</span>
+      </button>
+      <button class="btn-primary" id="btn-quick-produce" title="Open event publisher">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Produce Event
+      </button>
+
+      <!-- Logged-in User Profile Badge & Switch Role Button -->
+      <div class="user-profile-badge" id="user-profile-badge">
+        <span class="user-role-avatar" id="user-avatar-icon">⚙️</span>
+        <div class="user-role-text">
+          <strong id="user-role-label">PRODUCER</strong>
+          <span id="user-email-label">producer@amazonmsk.com</span>
+        </div>
+        <button class="btn-sm btn-secondary" id="btn-open-login" title="Switch Role or Login">Switch Role</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar" id="sidebar">
+      <div class="sidebar-section-title">STREAMING CONSOLE</div>
+      <nav class="sidebar-nav">
+        <!-- Consumer Grievance Portal Tab -->
+        <button class="nav-item" data-tab="tab-consumer-portal" id="nav-tab-consumer-portal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Consumer Portal</span>
+          <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Consumer</span>
+        </button>
+
+        <button class="nav-item active" data-tab="tab-dashboard" id="nav-tab-dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Cluster Overview</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-producer" id="nav-tab-producer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Event Producer</span>
+          <span class="badge-mini">Studio</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-inspector" id="nav-tab-inspector">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Live Stream Inspector</span>
+          <span class="badge-live pulsing">LIVE</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-topics" id="nav-tab-topics">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Kafka Topics</span>
+          <span class="badge-count" id="sidebar-topic-count">5</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-consumers" id="nav-tab-consumers">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Consumer Groups & Lag</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-topology" id="nav-tab-topology">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>Architecture & Topology</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-guide" id="nav-tab-guide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Reviewer Guide & Q&A</span>
+          <span class="badge-mini" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">7 Steps</span>
+        </button>
+      </nav>
+
+      <!-- MSK Cluster Info Box -->
+      <div class="sidebar-cluster-card">
+        <div class="cluster-card-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          <span>MSK Cluster Info</span>
+        </div>
+        <div class="cluster-info-row">
+          <span>Type</span>
+          <strong>Provisioned Multi-AZ</strong>
+        </div>
+        <div class="cluster-info-row">
+          <span>Instance</span>
+          <strong>kafka.m5.xlarge</strong>
+        </div>
+        <div class="cluster-info-row">
+          <span>EBS Storage</span>
+          <strong>1,000 GiB / broker</strong>
+        </div>
+        <div class="cluster-info-row">
+          <span>Encryption</span>
+          <strong>TLS (In-transit + KMS)</strong>
+        </div>
+        <div class="cluster-info-row">
+          <span>Authentication</span>
+          <strong>AWS IAM & SASL/SCRAM</strong>
+        </div>
+        <button class="btn-secondary btn-sm full-width mt-10" id="btn-copy-bootstrap">
+          Copy Bootstrap Brokers
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="app-version">Antigravity MSK Engine v2.4</div>
+        <div class="build-status">Connected to AWS MSK Simulator</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main-content">
+      
+      <!-- ================= TAB 0: CONSUMER GRIEVANCE PORTAL ================= -->
+      <section class="tab-pane" id="tab-consumer-portal">
+        <div class="panel-card glow-cyan mb-20">
+          <div class="panel-header">
+            <div>
+              <span class="detail-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">CONSUMER SERVICE PORTAL</span>
+              <h3 class="panel-title" style="margin-top: 6px;">Customer Grievance & Complaint Dispatcher</h3>
+              <p class="panel-subtitle">Lodge live customer grievances streamed directly into Amazon MSK topic <code>customer.complaints.v1</code> for real-time AI triage and producer resolution</p>
+            </div>
+            <div class="consumer-header-stat">
+              <span class="status-dot pulsing"></span>
+              <span>Connected as Consumer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="producer-layout">
+          <!-- Left: Complaint Submission Form -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">File a Service Complaint / Grievance</h3>
+                <p class="panel-subtitle">Your grievance is hashed by Customer ID and committed to Kafka with zero packet loss</p>
+              </div>
+              <span class="badge-outline">MSK Topic: customer.complaints.v1</span>
+            </div>
+
+            <form id="consumer-complaint-form" class="producer-form">
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="comp-cust-name">Your Full Name <span class="required">*</span></label>
+                  <input type="text" id="comp-cust-name" class="form-input" value="Sarah Jenkins" required>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="comp-cust-email">Email Address <span class="required">*</span></label>
+                  <input type="email" id="comp-cust-email" class="form-input" value="consumer@customer.com" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="comp-order-id">Order / Transaction ID <span class="required">*</span></label>
+                  <input type="text" id="comp-order-id" class="form-input code-font" value="ORD-98412" required>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="comp-category-select">Grievance Category <span class="required">*</span></label>
+                  <select id="comp-category-select" class="form-select">
+                    <option value="BILLING_DOUBLE_CHARGE">💳 Billing: Charged Twice for Single Order</option>
+                    <option value="SERVICE_OUTAGE">☁️ Cloud Service: Server Instance Terminated</option>
+                    <option value="DAMAGED_SHIPMENT">📦 Delivery: Hardware Damaged in Transit</option>
+                    <option value="SLA_BREACH_DELAY">⏱️ Shipping: 24-Hour SLA Delivery Breached</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="comp-severity-select">Urgency Level</label>
+                  <select id="comp-severity-select" class="form-select">
+                    <option value="CRITICAL" selected>Critical (Financial / Double Charge / Outage)</option>
+                    <option value="HIGH">High (Delayed / Damaged Product)</option>
+                    <option value="MEDIUM">Medium (General Inquiry)</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label>Kafka Ingestion Guarantees</label>
+                  <div class="kafka-pill-note">
+                    <span>acks=all &bull; Partition Hashing by Email &bull; Multi-AZ Sync</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comp-description">Grievance Description <span class="required">*</span></label>
+                <textarea id="comp-description" class="form-input" rows="4" required style="resize: vertical;">Account was debited $289.99 twice during checkout for high-performance SSD volume. Order cart marked as failed but bank statement shows deduction!</textarea>
+              </div>
+
+              <div class="producer-actions-bar">
+                <div class="producer-stats">
+                  <span>Target Broker: <strong>Auto-Balanced</strong></span>
+                  <span>Expected Triage: <strong>&lt; 10 ms</strong></span>
+                </div>
+                <button type="submit" class="btn-primary" id="btn-submit-consumer-complaint">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  Submit Grievance to Amazon MSK
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right: Consumer Submitted Complaints Tracker -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">My Complaints & Live Stream Status</h3>
+                <p class="panel-subtitle">Real-time status updates broadcast from Producer and AI Resolution engine</p>
+              </div>
+              <button class="btn-text-action" id="btn-refresh-consumer-complaints">Refresh</button>
+            </div>
+
+            <div class="consumer-complaints-feed" id="consumer-my-complaints-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 1: CLUSTER DASHBOARD ================= -->
+      <section class="tab-pane active" id="tab-dashboard">
+        <!-- Top Metrics Cards -->
+        <div class="metrics-grid">
+          <!-- Card 1: Ingress Rate -->
+          <div class="metric-card glow-cyan">
+            <div class="metric-header">
+              <span class="metric-title">MESSAGES IN / SEC</span>
+              <div class="metric-icon cyan">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 19V5M5 12l7-7 7 7"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="card-metric-msg-in">1,420</div>
+            <div class="metric-delta positive">
+              <span>▲ +14.2%</span> vs last hour
+            </div>
+            <div class="metric-sub">Throughput: <strong id="card-metric-bytes-in">14.8 MB/s</strong></div>
+          </div>
+
+          <!-- Card 2: Egress Rate -->
+          <div class="metric-card glow-emerald">
+            <div class="metric-header">
+              <span class="metric-title">MESSAGES OUT / SEC</span>
+              <div class="metric-icon emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="card-metric-msg-out">2,840</div>
+            <div class="metric-delta positive">
+              <span>▲ +8.7%</span> fan-out ratio 2.0x
+            </div>
+            <div class="metric-sub">Throughput: <strong id="card-metric-bytes-out">29.6 MB/s</strong></div>
+          </div>
+
+          <!-- Card 3: Consumer Lag -->
+          <div class="metric-card glow-orange">
+            <div class="metric-header">
+              <span class="metric-title">TOTAL CONSUMER LAG</span>
+              <div class="metric-icon orange">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value" id="card-metric-lag">18</div>
+            <div class="metric-delta normal">
+              <span>Healthy</span> &lt; 50ms latency
+            </div>
+            <div class="metric-sub">Across <strong>4 active consumer groups</strong></div>
+          </div>
+
+          <!-- Card 4: Under-Replicated Partitions -->
+          <div class="metric-card glow-purple">
+            <div class="metric-header">
+              <span class="metric-title">REPLICATION HEALTH</span>
+              <div class="metric-icon purple">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="metric-value text-success" id="card-metric-urp">0 URP</div>
+            <div class="metric-delta positive">
+              <span>100% ISR</span> In-Sync Replicas
+            </div>
+            <div class="metric-sub">Partition Leaders: <strong>Balanced</strong></div>
+          </div>
+        </div>
+
+        <!-- Real-time Charts Section -->
+        <div class="charts-row">
+          <div class="panel-card chart-panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Real-Time Ingress & Egress Message Velocity</h3>
+                <p class="panel-subtitle">Live CloudWatch telemetry streamed from Amazon MSK brokers</p>
+              </div>
+              <div class="chart-legend">
+                <span class="legend-item"><span class="legend-dot cyan"></span> Ingress (msgs/s)</span>
+                <span class="legend-item"><span class="legend-dot emerald"></span> Egress (msgs/s)</span>
+              </div>
+            </div>
+            <div class="canvas-container">
+              <canvas id="realtimeThroughputChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="panel-card latency-panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">End-to-End Event Latency</h3>
+                <p class="panel-subtitle">Producer Ack to Consumer Delivery</p>
+              </div>
+              <span class="badge-outline">p99: 14.2ms</span>
+            </div>
+            <div class="canvas-container">
+              <canvas id="realtimeLatencyChart" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- MSK Broker Nodes Status Grid -->
+        <div class="panel-card mt-20">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">MSK Broker Cluster Architecture (Multi-AZ)</h3>
+              <p class="panel-subtitle">Broker load, CPU utilization, disk storage and partition leader assignments</p>
+            </div>
+            <div class="header-tag">AWS AZs: us-east-1a, 1b, 1c</div>
+          </div>
+
+          <div class="broker-grid" id="broker-grid-container">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: EVENT PRODUCER STUDIO ================= -->
+      <section class="tab-pane" id="tab-producer">
+        <!-- INCOMING CONSUMER COMPLAINTS LIVE INBOX FOR PRODUCERS -->
+        <div class="panel-card glow-orange mb-20" id="producer-complaints-inbox-panel">
+          <div class="panel-header">
+            <div>
+              <span class="detail-badge" style="background: rgba(255, 153, 0, 0.2); color: #ff9900;">LIVE INGESTION STREAM</span>
+              <h3 class="panel-title" style="margin-top: 6px;">Incoming Consumer Complaints Inbox & Resolver</h3>
+              <p class="panel-subtitle">Grievances submitted by Consumers in real time via Amazon MSK topic <code>customer.complaints.v1</code></p>
+            </div>
+            <div class="inbox-header-actions">
+              <span class="badge-count" id="producer-pending-complaints-count">Loading...</span>
+              <button class="btn-text-action" id="btn-refresh-producer-inbox">Refresh Inbox</button>
+            </div>
+          </div>
+
+          <div class="complaints-inbox-grid" id="producer-complaints-list">
+            <!-- Dynamically populated complaints with 1-click Approve & Resolve button -->
+          </div>
+        </div>
+
+        <div class="producer-layout">
+          <!-- Left: Event Composer -->
+          <div class="panel-card producer-composer">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Event Producer Studio</h3>
+                <p class="panel-subtitle">Compose, validate, and publish real-time messages directly into Kafka topics</p>
+              </div>
+              <div class="template-selector-wrap">
+                <label for="template-select">Quick Template:</label>
+                <select id="template-select" class="form-select">
+                  <option value="ecommerce">🛒 E-Commerce Order Placed</option>
+                  <option value="iot">📡 IoT Telemetry Heartbeat</option>
+                  <option value="fraud">⚠️ Fraud Risk Detection</option>
+                  <option value="payment">💳 Financial Transaction</option>
+                  <option value="clickstream">🖱️ User Clickstream Event</option>
+                </select>
+              </div>
+            </div>
+
+            <form id="producer-form" class="producer-form">
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="producer-topic-select">Target Topic <span class="required">*</span></label>
+                  <select id="producer-topic-select" class="form-select" required>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="producer-partition-key">Partition Key</label>
+                  <div class="input-with-button">
+                    <input type="text" id="producer-partition-key" class="form-input" placeholder="e.g. user_98412 or device_004">
+                    <button type="button" class="btn-sm btn-secondary" id="btn-gen-random-key" title="Generate UUID Key">Random</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="producer-headers">Kafka Record Headers (JSON Key-Value)</label>
+                  <input type="text" id="producer-headers" class="form-input code-font" value='{"trace-id": "tr-89712a", "source": "web-checkout-service", "schema-ver": "1.4"}'>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="producer-compression">Compression Codec</label>
+                  <select id="producer-compression" class="form-select">
+                    <option value="snappy">Snappy (Recommended for MSK)</option>
+                    <option value="lz4">LZ4 (Ultra Low Latency)</option>
+                    <option value="gzip">GZIP (High Compression)</option>
+                    <option value="none">None (Plaintext)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="label-with-actions">
+                  <label for="producer-payload-editor">Event Value Payload (JSON) <span class="required">*</span></label>
+                  <div class="payload-actions">
+                    <button type="button" class="btn-text-action" id="btn-format-json">Format JSON</button>
+                    <button type="button" class="btn-text-action" id="btn-reset-payload">Reset Template</button>
+                  </div>
+                </div>
+                <div class="code-editor-wrapper">
+                  <textarea id="producer-payload-editor" class="code-editor" spellcheck="false" rows="12"></textarea>
+                  <div class="json-validation-badge" id="json-valid-indicator">Valid JSON</div>
+                </div>
+              </div>
+
+              <!-- Action Toolbar -->
+              <div class="producer-actions-bar">
+                <div class="producer-stats">
+                  <span>Size: <strong id="payload-byte-size">0 bytes</strong></span>
+                  <span>Estimated ACK: <strong>~2.4 ms</strong></span>
+                </div>
+                <div class="producer-buttons">
+                  <button type="button" class="btn-secondary" id="btn-burst-publish">
+                    ⚡ Burst 25 Events
+                  </button>
+                  <button type="submit" class="btn-primary" id="btn-publish-single">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Publish to MSK
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right: Live Acknowledgment & Producer Telemetry -->
+          <div class="panel-card producer-recent-panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Producer Acknowledgments (ACKs)</h3>
+                <p class="panel-subtitle">Partition allocation & Broker response log</p>
+              </div>
+              <button class="btn-text-action" id="btn-clear-acks">Clear</button>
+            </div>
+            
+            <div class="ack-feed" id="producer-ack-feed">
+              <!-- Dynamically populated with ACK events -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: LIVE STREAM INSPECTOR ================= -->
+      <section class="tab-pane" id="tab-inspector">
+        <div class="panel-card inspector-card">
+          <!-- Toolbar -->
+          <div class="inspector-toolbar">
+            <div class="toolbar-left">
+              <div class="live-indicator-tag">
+                <span class="status-dot pulsing"></span>
+                <span>STREAMING</span>
+              </div>
+              <span class="stream-stats-text" id="inspector-msg-counter">0 messages captured</span>
+            </div>
+
+            <!-- Filters -->
+            <div class="toolbar-filters">
+              <select id="inspector-topic-filter" class="form-select form-select-sm">
+                <option value="ALL">All Topics</option>
+                <!-- Populated dynamically -->
+              </select>
+
+              <select id="inspector-partition-filter" class="form-select form-select-sm">
+                <option value="ALL">All Partitions</option>
+                <option value="0">Partition 0</option>
+                <option value="1">Partition 1</option>
+                <option value="2">Partition 2</option>
+              </select>
+
+              <div class="search-input-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="inspector-search-input" class="form-input form-input-sm" placeholder="Filter text / key / value...">
+              </div>
+
+              <button class="btn-secondary btn-sm" id="btn-toggle-consumer-pause">
+                <span id="pause-icon">⏸️</span> <span id="pause-btn-text">Pause Stream</span>
+              </button>
+
+              <button class="btn-secondary btn-sm" id="btn-clear-inspector" title="Clear captured stream">
+                Clear
+              </button>
+
+              <button class="btn-secondary btn-sm" id="btn-export-inspector" title="Export stream messages to JSON">
+                Export JSON
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Feed Table / List -->
+          <div class="stream-container" id="stream-container">
+            <table class="stream-table" id="stream-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">TIMESTAMP</th>
+                  <th style="width: 180px;">TOPIC</th>
+                  <th style="width: 80px;">PART</th>
+                  <th style="width: 100px;">OFFSET</th>
+                  <th style="width: 180px;">MESSAGE KEY</th>
+                  <th>PAYLOAD PREVIEW</th>
+                  <th style="width: 100px;">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="stream-table-body">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: TOPICS MANAGEMENT ================= -->
+      <section class="tab-pane" id="tab-topics">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Managed Kafka Topics</h3>
+              <p class="panel-subtitle">Configure partitions, retention policies, replication factors and inspect data distribution</p>
+            </div>
+            <button class="btn-primary" id="btn-open-create-topic-modal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create Topic
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="topics-table">
+              <thead>
+                <tr>
+                  <th>TOPIC NAME</th>
+                  <th>PARTITIONS</th>
+                  <th>REPLICATION</th>
+                  <th>RETENTION</th>
+                  <th>CLEANUP POLICY</th>
+                  <th>TOTAL MESSAGES</th>
+                  <th>DATA SIZE</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="topics-table-body">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: CONSUMER GROUPS & LAG ================= -->
+      <section class="tab-pane" id="tab-consumers">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Active Consumer Groups & Lag Monitoring</h3>
+              <p class="panel-subtitle">Monitor downstream applications, partition assignments, and committed offset lag</p>
+            </div>
+            <div class="consumer-stat-badges">
+              <span class="stat-pill"><strong id="total-groups-count">4</strong> Groups</span>
+              <span class="stat-pill success">All Consumers In-Sync</span>
+            </div>
+          </div>
+
+          <div class="consumer-groups-grid" id="consumer-groups-container">
+            <!-- Dynamically populated consumer group cards -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 6: ARCHITECTURE & TOPOLOGY ================= -->
+      <section class="tab-pane" id="tab-topology">
+        <div class="panel-card topology-card">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Amazon MSK Event-Driven Cloud Architecture</h3>
+              <p class="panel-subtitle">High-availability streaming topology across Availability Zones with AWS IAM, VPC, and Connectors</p>
+            </div>
+            <div class="topology-legend">
+              <span class="legend-chip"><span class="chip-color producer"></span> Producers</span>
+              <span class="legend-chip"><span class="chip-color msk"></span> MSK Kafka Brokers</span>
+              <span class="legend-chip"><span class="chip-color consumer"></span> Downstream Consumers</span>
+            </div>
+          </div>
+
+          <!-- Interactive SVG Architecture Diagram -->
+          <div class="architecture-diagram-container" id="arch-diagram-wrapper">
+            <svg id="architecture-svg" viewBox="0 0 1100 560" class="arch-svg">
+              <defs>
+                <linearGradient id="grad-producer" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0284c7"/>
+                  <stop offset="100%" stop-color="#0369a1"/>
+                </linearGradient>
+                <linearGradient id="grad-broker" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff9900"/>
+                  <stop offset="100%" stop-color="#d97706"/>
+                </linearGradient>
+                <linearGradient id="grad-consumer" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="100%" stop-color="#059669"/>
+                </linearGradient>
+                <linearGradient id="grad-kraft" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#8b5cf6"/>
+                  <stop offset="100%" stop-color="#6d28d9"/>
+                </linearGradient>
+                
+                <filter id="glow-orange" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ff9900" flood-opacity="0.6"/>
+                </filter>
+                <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#00f2fe" flood-opacity="0.6"/>
+                </filter>
+              </defs>
+
+              <!-- Connection Pipelines -->
+              <g id="pipelines-layer">
+                <!-- Producer to Broker paths -->
+                <path d="M 210,130 C 310,130 310,210 410,210" class="pipe-line" id="pipe-p1"/>
+                <path d="M 210,240 C 310,240 310,280 410,280" class="pipe-line" id="pipe-p2"/>
+                <path d="M 210,350 C 310,350 310,350 410,350" class="pipe-line" id="pipe-p3"/>
+                <path d="M 210,460 C 310,460 310,380 410,380" class="pipe-line" id="pipe-p4"/>
+
+                <!-- Broker to Consumer paths -->
+                <path d="M 690,210 C 790,210 790,130 890,130" class="pipe-line" id="pipe-c1"/>
+                <path d="M 690,280 C 790,280 790,240 890,240" class="pipe-line" id="pipe-c2"/>
+                <path d="M 690,350 C 790,350 790,350 890,350" class="pipe-line" id="pipe-c3"/>
+                <path d="M 690,380 C 790,380 790,460 890,460" class="pipe-line" id="pipe-c4"/>
+              </g>
+
+              <!-- MSK VPC Cluster Boundary Box -->
+              <rect x="370" y="70" width="360" height="440" rx="16" class="vpc-boundary"/>
+              <text x="390" y="105" class="vpc-label">AWS VPC (Private Subnets) &bull; Amazon MSK Cluster</text>
+              <text x="390" y="125" class="vpc-sublabel">TLS Encryption &bull; AWS KMS Key &bull; Multi-AZ Replication</text>
+
+              <!-- Producers Column -->
+              <!-- Producer 1: Web & Mobile App -->
+              <g class="arch-node" transform="translate(40, 95)" onclick="showTopologyDetail('producer_apps')">
+                <rect width="170" height="70" rx="10" class="node-box producer-node"/>
+                <text x="20" y="32" class="node-title">Web & Mobile Apps</text>
+                <text x="20" y="52" class="node-sub">REST / WebSocket API</text>
+              </g>
+
+              <!-- Producer 2: IoT Sensors -->
+              <g class="arch-node" transform="translate(40, 205)" onclick="showTopologyDetail('producer_iot')">
+                <rect width="170" height="70" rx="10" class="node-box producer-node"/>
+                <text x="20" y="32" class="node-title">AWS IoT Core</text>
+                <text x="20" y="52" class="node-sub">MQTT Sensor Fleet</text>
+              </g>
+
+              <!-- Producer 3: Microservices -->
+              <g class="arch-node" transform="translate(40, 315)" onclick="showTopologyDetail('producer_microservices')">
+                <rect width="170" height="70" rx="10" class="node-box producer-node"/>
+                <text x="20" y="32" class="node-title">E-Commerce Services</text>
+                <text x="20" y="52" class="node-sub">Amazon ECS Fargate</text>
+              </g>
+
+              <!-- Producer 4: Database CDC -->
+              <g class="arch-node" transform="translate(40, 425)" onclick="showTopologyDetail('producer_cdc')">
+                <rect width="170" height="70" rx="10" class="node-box producer-node"/>
+                <text x="20" y="32" class="node-title">Aurora / DynamoDB</text>
+                <text x="20" y="52" class="node-sub">Debezium CDC Connector</text>
+              </g>
+
+              <!-- MSK Brokers (Inside Cluster) -->
+              <!-- Broker 1 -->
+              <g class="arch-node" transform="translate(410, 150)" onclick="showTopologyDetail('broker_1')">
+                <rect width="280" height="75" rx="10" class="node-box broker-node"/>
+                <text x="20" y="30" class="node-title broker-title">Broker 1 &bull; b-1.msk-cluster</text>
+                <text x="20" y="50" class="node-sub">AZ: us-east-1a &bull; Leader 8 Partitions</text>
+                <circle cx="255" cy="35" r="5" fill="#10B981" class="pulsing"/>
+              </g>
+
+              <!-- Broker 2 -->
+              <g class="arch-node" transform="translate(410, 245)" onclick="showTopologyDetail('broker_2')">
+                <rect width="280" height="75" rx="10" class="node-box broker-node"/>
+                <text x="20" y="30" class="node-title broker-title">Broker 2 &bull; b-2.msk-cluster</text>
+                <text x="20" y="50" class="node-sub">AZ: us-east-1b &bull; Leader 8 Partitions</text>
+                <circle cx="255" cy="35" r="5" fill="#10B981" class="pulsing"/>
+              </g>
+
+              <!-- Broker 3 -->
+              <g class="arch-node" transform="translate(410, 340)" onclick="showTopologyDetail('broker_3')">
+                <rect width="280" height="75" rx="10" class="node-box broker-node"/>
+                <text x="20" y="30" class="node-title broker-title">Broker 3 &bull; b-3.msk-cluster</text>
+                <text x="20" y="50" class="node-sub">AZ: us-east-1c &bull; Leader 8 Partitions</text>
+                <circle cx="255" cy="35" r="5" fill="#10B981" class="pulsing"/>
+              </g>
+
+              <!-- KRaft Controller Quorum -->
+              <g class="arch-node" transform="translate(410, 435)" onclick="showTopologyDetail('kraft')">
+                <rect width="280" height="55" rx="8" class="node-box kraft-node"/>
+                <text x="20" y="28" class="node-title-sm">Kafka KRaft Metadata Quorum</text>
+                <text x="20" y="44" class="node-sub-sm">Managed Quorum &bull; Zero ZooKeeper</text>
+              </g>
+
+              <!-- Consumers Column -->
+              <!-- Consumer 1: Lambda -->
+              <g class="arch-node" transform="translate(890, 95)" onclick="showTopologyDetail('consumer_lambda')">
+                <rect width="170" height="70" rx="10" class="node-box consumer-node"/>
+                <text x="20" y="32" class="node-title">AWS Lambda</text>
+                <text x="20" y="52" class="node-sub">Serverless Event Trigger</text>
+              </g>
+
+              <!-- Consumer 2: Fargate Analytics -->
+              <g class="arch-node" transform="translate(890, 205)" onclick="showTopologyDetail('consumer_fargate')">
+                <rect width="170" height="70" rx="10" class="node-box consumer-node"/>
+                <text x="20" y="32" class="node-title">Fraud Detection Engine</text>
+                <text x="20" y="52" class="node-sub">ECS Stream Processors</text>
+              </g>
+
+              <!-- Consumer 3: OpenSearch -->
+              <g class="arch-node" transform="translate(890, 315)" onclick="showTopologyDetail('consumer_opensearch')">
+                <rect width="170" height="70" rx="10" class="node-box consumer-node"/>
+                <text x="20" y="32" class="node-title">Amazon OpenSearch</text>
+                <text x="20" y="52" class="node-sub">Live Observability Logs</text>
+              </g>
+
+              <!-- Consumer 4: S3 Data Lake -->
+              <g class="arch-node" transform="translate(890, 425)" onclick="showTopologyDetail('consumer_s3')">
+                <rect width="170" height="70" rx="10" class="node-box consumer-node"/>
+                <text x="20" y="32" class="node-title">Amazon S3 Lake</text>
+                <text x="20" y="52" class="node-sub">MSK Connect &bull; Parquet</text>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Dynamic Node Details Inspector -->
+          <div class="topology-node-inspector" id="topology-detail-box">
+            <div class="detail-header">
+              <span class="detail-badge" id="topo-node-badge">AWS MSK BROKER</span>
+              <h4 id="topo-node-name">b-1.msk-prod-eventstream-01.us-east-1.amazonaws.com</h4>
+            </div>
+            <p id="topo-node-desc">
+              Kafka Broker 1 operating in Availability Zone us-east-1a. Manages active partition leaders, persists records to gp3 EBS storage volumes, and coordinates real-time replication with Brokers 2 and 3.
+            </p>
+            <div class="topo-specs-grid" id="topo-specs-grid">
+              <div class="spec-item"><span>Security:</span> <strong>AWS IAM + TLS 1.3</strong></div>
+              <div class="spec-item"><span>Throughput:</span> <strong>620 msgs/s (6.2 MB/s)</strong></div>
+              <div class="spec-item"><span>Subnet:</span> <strong>subnet-081af29b (10.0.1.0/24)</strong></div>
+              <div class="spec-item"><span>Storage Used:</span> <strong>242 GB / 1,000 GB</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 7: REVIEWER GUIDE & ARCHITECTURE OBSERVATIONS ================= -->
+      <section class="tab-pane" id="tab-guide">
+        <!-- Banner Intro -->
+        <div class="panel-card guide-intro-card glow-cyan mb-20">
+          <div class="panel-header">
+            <div>
+              <span class="detail-badge">DEFENSE & REVIEW READY</span>
+              <h3 class="panel-title" style="margin-top: 6px;">Amazon MSK Streaming Console — Project Reviewer Presentation Guide</h3>
+              <p class="panel-subtitle">Complete word-for-word spoken teleprompter script, technical architecture defense, and real-world complaint processing pipeline</p>
+            </div>
+            <button class="btn-autopilot" onclick="AUTOPILOT.start()">
+              <span class="autopilot-pulse"></span>
+              <span>🎬 Launch Live Automated Tour</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SPECIAL CASE STUDY: Customer Complaints Ingestion, AI Triage & Final Observation -->
+        <div class="panel-card complaint-case-card glow-orange mb-20">
+          <div class="panel-header">
+            <div>
+              <span class="detail-badge" style="background: rgba(255, 153, 0, 0.2); color: #ff9900;">REAL-WORLD BUSINESS USE CASE</span>
+              <h3 class="panel-title" style="margin-top: 6px;">Customer Complaints Ingestion, Automated Triage & Final Observation</h3>
+              <p class="panel-subtitle">Demonstrating how Amazon MSK ingests customer grievances, performs real-time severity scoring, recommends actions, and outputs final observations</p>
+            </div>
+            <button class="btn-primary" id="btn-simulate-complaint">
+              🚨 Simulate Customer Complaint Event
+            </button>
+          </div>
+
+          <div class="complaint-pipeline-grid">
+            <div class="pipeline-step-box">
+              <div class="pipe-step-num">STAGE 1</div>
+              <h5>Producer Ingestion</h5>
+              <p>Customer lodges complaint on mobile/web app. Producer hashes <code>customer_id</code> to partition, attaching trace headers with <code>acks=all</code>.</p>
+              <div class="pipe-tag">Topic: customer.complaints.v1</div>
+            </div>
+
+            <div class="pipeline-step-box">
+              <div class="pipe-step-num">STAGE 2</div>
+              <h5>AI Sentiment & Severity Triage</h5>
+              <p>Consumer (ECS / Lambda) analyzes complaint text, sentiment polarity, and customer tier to calculate urgency score (1 to 10).</p>
+              <div class="pipe-tag highlight">Latency: &lt; 8.4 ms</div>
+            </div>
+
+            <div class="pipeline-step-box">
+              <div class="pipe-step-num">STAGE 3</div>
+              <h5>Automated Recommendation</h5>
+              <p>System automatically recommends action: Instant auto-refund, priority human escalation, or account credit.</p>
+              <div class="pipe-tag success">Decision Engine</div>
+            </div>
+
+            <div class="pipeline-step-box">
+              <div class="pipe-step-num">STAGE 4</div>
+              <h5>Final Observation & Audit</h5>
+              <p>Resolved events stream to S3 Data Lake via MSK Connect for compliance. Real-time metrics show zero backlog or packet loss.</p>
+              <div class="pipe-tag">Parquet Archive</div>
+            </div>
+          </div>
+
+          <!-- Dynamic Complaint Result Display Box -->
+          <div class="complaint-result-box" id="complaint-live-result" style="display: none;">
+            <div class="complaint-result-header">
+              <span class="status-dot pulsing"></span>
+              <strong id="live-comp-id">Complaint #CMP-89102 Ingested</strong>
+              <span class="badge-mini" id="live-comp-severity">CRITICAL SEVERITY</span>
+            </div>
+            <div class="complaint-result-body">
+              <div class="comp-col">
+                <span class="lbl">Customer Description:</span>
+                <p id="live-comp-text">"Charged twice for order #90214, account debited $289.99, order failed!"</p>
+              </div>
+              <div class="comp-col">
+                <span class="lbl">Automated AI Recommendation:</span>
+                <p><strong id="live-comp-rec" style="color: #10b981;">INSTANT AUTO-REFUND APPROVED ($289.99) + 15% APOLOGY VOUCHER</strong></p>
+              </div>
+              <div class="comp-col">
+                <span class="lbl">Final Technical Observation:</span>
+                <p id="live-comp-obs">MSK processed grievance across broker 2 [P1, Offset #11682] in 2.4ms with zero data loss and published to downstream escalation queue.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7-STEP DETAILED PRESENTATION TELEPROMPTER CARDS -->
+        <div class="guide-steps-container">
+
+          <!-- Step 1 Card -->
+          <div class="panel-card guide-step-card">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 1</span>
+                <h4>Amazon MSK Multi-AZ Cluster Overview & Fault Tolerance</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 0; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 1 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Good morning everyone. Today, I am demonstrating our enterprise event streaming platform built on <strong>Amazon Managed Streaming for Apache Kafka (Amazon MSK)</strong>. As you can see on the overview dashboard, our cluster is running <strong>Kafka version 3.6.0 in KRaft consensus mode</strong>. We have deployed three dedicated broker nodes distributed across three separate AWS Availability Zones in <code>us-east-1</code>: Zones 1A, 1B, and 1C. This guarantees multi-AZ fault tolerance with zero single points of failure. Even if an entire AWS data center goes offline, our cluster retains 100% in-sync replicas with zero under-replicated partitions. The real-time charts below stream live CloudWatch velocity metrics with latency under 4 milliseconds."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>KRaft Mode:</strong> Eliminates legacy external ZooKeeper dependencies. Partition leader elections take &lt; 90ms. Each broker uses AWS GP3 EBS volumes with dedicated IOPS and multi-AZ synchronous replication (<code>min.insync.replicas=2</code>).</p>
+              <div class="tech-qa">
+                <strong>Reviewer Question:</strong> <em>"Why Amazon MSK instead of self-hosting Kafka on EC2?"</em><br>
+                <strong>Your Answer:</strong> <em>"Self-hosting requires manual OS patching, ZooKeeper maintenance, and custom rebalancing scripts. Amazon MSK automates broker healing, storage auto-expansion, rolling upgrades, and integrates natively with AWS IAM and KMS encryption."</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 2</span>
+                <h4>Real-Time Event Producer Studio & Partition Routing</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 1; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 2 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Next, we demonstrate the producer layer in our <strong>Event Producer Studio</strong>. Upstream microservices, IoT devices, or payment gateways publish records to Kafka topics. Here, we select the IoT Telemetry Heartbeat template stamped with sensor diagnostics. Notice the <strong>Partition Key</strong>: Kafka hashes this key using the <strong>Murmur2 algorithm</strong> to guarantee strict FIFO ordering within the same partition. Upon clicking 'Publish to MSK', our backend ingests the payload, assigns it to Broker 1, and responds with an acknowledgment in just <strong>2.15 milliseconds</strong>, assigning offset #30412."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>Partitioning:</strong> <code>hash(key) % partitions</code> ensures records for the same device or customer are serialized sequentially in one partition. <code>acks=all</code> guarantees the leader broker commits the message to follower replicas before responding.</p>
+              <div class="tech-qa">
+                <strong>Reviewer Question:</strong> <em>"How do you handle invalid schemas?"</em><br>
+                <strong>Your Answer:</strong> <em>"Our client verifies JSON syntax and payload size prior to dispatch. In production, this connects to AWS Glue Schema Registry to enforce strict backward/forward schema compatibility checks."</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 3</span>
+                <h4>High-Throughput Concurrency & Burst Ingestion</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 2; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 3 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "In Step 3, we test cluster scalability by triggering a <strong>Burst of 25 concurrent events</strong>. In the ACKs panel, notice how partition assignments are immediately parallelized across Partition 0, 1, and 2 across all three brokers. Because Kafka topics are partitioned append-only logs, write operations do not block each other, demonstrating linear horizontal scalability under flash-traffic spikes."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>Throughput Parallelization:</strong> Each partition has its own dedicated write log, eliminating single-disk bottlenecks. Micro-batching (<code>linger.ms=5</code>) ensures optimal network packet utilization.</p>
+            </div>
+          </div>
+
+          <!-- Step 4 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 4</span>
+                <h4>Live Stream Consumer Inspector & Record Anatomy</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 3; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 4 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Having published events, we now inspect the downstream consumer experience in the <strong>Live Stream Inspector</strong>. Whenever an event is ingested, it is broadcast to connected consumers over persistent WebSockets. Clicking 'Inspect' reveals the internal anatomy of a Kafka record: the immutable 64-bit <strong>Offset</strong>, the <strong>Broker Leader</strong>, <strong>Distributed Tracing Headers</strong>, and the decoded JSON payload."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>Offset Semantics:</strong> Offsets are sequential integers. Unlike traditional message queues (e.g. SQS), consuming a message does not delete it; independent consumers read at their own pace or replay history arbitrarily.</p>
+            </div>
+          </div>
+
+          <!-- Step 5 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 5</span>
+                <h4>Managed Kafka Topic Provisioning & Partition Cardinality</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 4; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 5 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Step 5 demonstrates cluster administration. Topics are the foundational channels in Kafka. As shown on screen, we dynamically provisioned <code>analytics.fraud.stream.v1</code> with 6 partitions to support high consumer concurrency, a replication factor of 3 for multi-AZ safety, and 7-day retention. The topic is validated and immediately available across the cluster."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>Partition Count:</strong> Partition counts dictate maximum consumer parallel concurrency. Partitions can be expanded at runtime but cannot be reduced without recreating the topic.</p>
+            </div>
+          </div>
+
+          <!-- Step 6 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 6</span>
+                <h4>Consumer Groups & Offset Lag Monitoring</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 5; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 6 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Step 6 addresses the health of downstream data consumers: <strong>Consumer Group Lag</strong>. A consumer group allows multiple worker containers to cooperatively consume topic partitions. 'Lag' represents the delta between the producer's latest offset and the consumer's committed offset. As verified by our green progress indicators, lag remains close to zero, proving downstream microservices process transactions in real time."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>CooperativeStickyAssignor:</strong> Eliminates legacy 'stop-the-world' consumer rebalancing. Only affected partitions migrate when new consumer workers join or leave.</p>
+            </div>
+          </div>
+
+          <!-- Step 7 Card -->
+          <div class="panel-card guide-step-card mt-15">
+            <div class="guide-step-header">
+              <div class="step-badge-title">
+                <span class="step-num-pill">STEP 7</span>
+                <h4>End-to-End AWS Cloud Architecture & Data Flow</h4>
+              </div>
+              <button class="btn-secondary btn-sm" onclick="AUTOPILOT.currentStepIndex = 6; AUTOPILOT.executeCurrentStep();">
+                ▶ Run Step 7 Live
+              </button>
+            </div>
+            <div class="guide-teleprompter-box">
+              <div class="teleprompter-label">🎙️ SPOKEN TELEPROMPTER SCRIPT (Read Aloud):</div>
+              <p class="teleprompter-text">
+                "Finally, Step 7 brings the complete cloud architecture together in our interactive topology view. Heterogeneous producers stream into our private AWS VPC. Amazon MSK acts as the central, immutable streaming backbone encrypted with AWS KMS. Specialized consumers fan out concurrently: AWS Lambda processes serverless event batches, ECS Fargate performs real-time fraud scoring, Amazon OpenSearch indexes observability logs, and MSK Connect streams parquet files into our Amazon S3 Data Lake. This concludes our walkthrough."
+              </p>
+            </div>
+            <div class="guide-technical-box">
+              <div class="tech-label">🧠 UNDER-THE-HOOD TECHNICAL DEFENSE:</div>
+              <p><strong>Security & Resilience:</strong> Strict VPC subnet isolation, TLS 1.3 encryption, and AWS IAM authentication. Cross-region disaster recovery supported via Amazon MSK Replicator."</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal 1: Message Detail Inspector -->
+  <div class="modal-backdrop" id="modal-msg-detail">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-pretitle">KAFKA RECORD DETAIL</div>
+          <h3 class="modal-title" id="msg-detail-title">Message Offset #10492</h3>
+        </div>
+        <button class="modal-close" id="btn-close-msg-detail">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="msg-meta-grid">
+          <div class="meta-box">
+            <span class="meta-lbl">TOPIC</span>
+            <span class="meta-val" id="modal-meta-topic">orders.v1</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-lbl">PARTITION</span>
+            <span class="meta-val highlight" id="modal-meta-partition">0</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-lbl">OFFSET</span>
+            <span class="meta-val" id="modal-meta-offset">10492</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-lbl">BROKER LEADER</span>
+            <span class="meta-val" id="modal-meta-broker">Broker-1</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-lbl">TIMESTAMP</span>
+            <span class="meta-val" id="modal-meta-timestamp">2026-10-03 22:04:12.891</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-lbl">MESSAGE KEY</span>
+            <span class="meta-val" id="modal-meta-key">user_9421</span>
+          </div>
+        </div>
+
+        <div class="code-box-header">RECORD HEADERS</div>
+        <pre class="code-pre" id="modal-headers-code">{}</pre>
+
+        <div class="code-box-header mt-15">PAYLOAD VALUE (DECODED JSON)</div>
+        <pre class="code-pre json-pre" id="modal-payload-code">{}</pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-copy-record-json">Copy JSON</button>
+        <button class="btn-primary" id="btn-done-msg-detail">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Create Topic Modal -->
+  <div class="modal-backdrop" id="modal-create-topic">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-pretitle">AMAZON MSK TOPIC PROVISIONING</div>
+          <h3 class="modal-title">Create New Kafka Topic</h3>
+        </div>
+        <button class="modal-close" id="btn-close-create-topic">&times;</button>
+      </div>
+      <form id="create-topic-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="topic-name-input">Topic Name <span class="required">*</span></label>
+            <input type="text" id="topic-name-input" class="form-input" placeholder="e.g. telemetry.sensor.v2 or payments.authorized" required pattern="[a-zA-Z0-9._\-]+">
+            <small class="form-help">Use alphanumeric characters, periods, hyphens, and underscores.</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="topic-partitions-input">Number of Partitions</label>
+              <select id="topic-partitions-input" class="form-select">
+                <option value="3" selected>3 (Recommended for 3-broker cluster)</option>
+                <option value="6">6 (High parallel consumer throughput)</option>
+                <option value="9">9 (Massive scale)</option>
+                <option value="1">1 (Strict single-thread FIFO ordering)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="topic-replication-input">Replication Factor</label>
+              <select id="topic-replication-input" class="form-select">
+                <option value="3" selected>3 (Standard AWS MSK Multi-AZ)</option>
+                <option value="2">2 (Reduced redundancy)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="topic-retention-hours">Retention Period (Hours)</label>
+              <input type="number" id="topic-retention-hours" class="form-input" value="168" min="1" max="87600">
+              <small class="form-help">Default: 168 hours (7 days)</small>
+            </div>
+            <div class="form-group flex-1">
+              <label for="topic-cleanup-policy">Cleanup Policy</label>
+              <select id="topic-cleanup-policy" class="form-select">
+                <option value="delete" selected>Delete (Time / Size based retention)</option>
+                <option value="compact">Compact (Log compaction by key)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel-create-topic">Cancel</button>
+          <button type="submit" class="btn-primary">Create Topic</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Auth Role Login (Consumer vs Producer) -->
+  <div class="modal-backdrop" id="modal-auth-login">
+    <div class="modal-card auth-modal-card">
+      <div class="modal-header auth-header">
+        <div class="auth-brand-lockup">
+          <div class="aws-logo-icon">
+            <svg viewBox="0 0 40 40" width="32" height="32" fill="none">
+              <rect width="40" height="40" rx="8" fill="#1E293B"/>
+              <path d="M12 28C15 30 25 30 28 28" stroke="#FF9900" stroke-width="3" stroke-linecap="round"/>
+              <path d="M29 27L28 28L29 29" stroke="#FF9900" stroke-width="3" stroke-linecap="round"/>
+              <path d="M10 16L18 20L10 24V16Z" fill="#00F2FE"/>
+              <path d="M20 12L30 17L20 22V12Z" fill="#38BDF8"/>
+            </svg>
+          </div>
+          <div>
+            <div class="modal-pretitle">AWS IDENTITY & ACCESS</div>
+            <h3 class="modal-title">Sign In to MSK Streaming Console</h3>
+          </div>
+        </div>
+        <button class="modal-close" id="btn-close-auth-login">&times;</button>
+      </div>
+
+      <div class="modal-body auth-body">
+        <p class="auth-intro-text">
+          Select your portal role to authenticate. In this event streaming architecture, <strong>Consumers lodge real-time complaints</strong> and <strong>Producers ingest & resolve them</strong> across the Kafka cluster.
+        </p>
+
+        <!-- Role Selector Switch -->
+        <div class="role-selector-toggle">
+          <button type="button" class="role-toggle-btn active" id="btn-select-consumer-role">
+            <span class="role-icon">🧑‍💼</span>
+            <div class="role-info">
+              <strong>Consumer Portal</strong>
+              <small>Lodge grievances & track status</small>
+            </div>
+          </button>
+          <button type="button" class="role-toggle-btn" id="btn-select-producer-role">
+            <span class="role-icon">⚙️</span>
+            <div class="role-info">
+              <strong>Producer Portal</strong>
+              <small>Manage cluster & resolve complaints</small>
+            </div>
+          </button>
+        </div>
+
+        <form id="auth-login-form" class="auth-form">
+          <div class="form-group">
+            <label for="auth-email-input">Email Address <span class="required">*</span></label>
+            <input type="email" id="auth-email-input" class="form-input" value="consumer@customer.com" required placeholder="Enter email">
+          </div>
+
+          <div class="form-group">
+            <label for="auth-password-input">Password <span class="required">*</span></label>
+            <input type="password" id="auth-password-input" class="form-input" value="msk-secure-pass-2026" required placeholder="Enter password">
+          </div>
+
+          <!-- Quick Autofill Buttons for Reviewers -->
+          <div class="quick-auth-fills">
+            <span class="quick-fill-label">1-Click Demo Fill:</span>
+            <button type="button" class="btn-text-action" id="btn-autofill-consumer">Consumer Credentials</button>
+            <span>&bull;</span>
+            <button type="button" class="btn-text-action" id="btn-autofill-producer">Producer Credentials</button>
+          </div>
+
+          <div class="auth-actions-row">
+            <button type="submit" class="btn-primary full-width" id="btn-submit-login">
+              <span>Sign In to Selected Portal</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Guided Tour / Autopilot Banner -->
+  <div class="autopilot-banner" id="autopilot-banner">
+    <div class="autopilot-top-row">
+      <div class="autopilot-tags">
+        <span class="autopilot-badge"><span class="autopilot-badge-dot"></span> AUTOPILOT TOUR</span>
+        <span class="autopilot-step-badge" id="ap-step-num">Step 1 of 7</span>
+      </div>
+      <div class="autopilot-controls">
+        <button class="btn-sm btn-secondary" id="ap-btn-prev">◀ Prev</button>
+        <button class="btn-sm btn-primary" id="ap-btn-pause-resume">⏸ Pause</button>
+        <button class="btn-sm btn-secondary" id="ap-btn-next">Next ▶</button>
+        <button class="btn-sm btn-secondary" id="ap-btn-exit" style="color: #f43f5e;">✖ Exit Tour</button>
+      </div>
+    </div>
+    <div class="autopilot-body">
+      <h4 id="ap-step-title">1. Amazon MSK Multi-AZ Cluster Overview</h4>
+      <p id="ap-step-desc">Monitoring 3 Kafka 3.6 brokers in US-East-1 across Availability Zones us-east-1a, 1b, and 1c with KRaft quorum metadata.</p>
+    </div>
+    <div class="autopilot-progress-track">
+      <div class="autopilot-progress-fill" id="ap-progress-fill" style="width: 14%;"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

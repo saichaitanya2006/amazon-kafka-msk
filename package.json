@@ -1,0 +1,25 @@
+{
+  "name": "amazon-msk-event-streaming",
+  "version": "1.0.0",
+  "description": "Amazon MSK Managed Kafka for Event Streaming - Enterprise Dashboard and Real-Time Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "amazon-msk",
+    "kafka",
+    "event-streaming",
+    "dashboard",
+    "websocket"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "serverless-http": "^4.0.0",
+    "ws": "^8.16.0"
+  }
+}
