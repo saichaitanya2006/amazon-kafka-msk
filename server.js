@@ -640,45 +640,48 @@ wss.on('connection', (ws) => {
 });
 
 // ==========================================
-// 5. BACKGROUND TELEMETRY & SIMULATOR TICKER
+// 5. BACKGROUND TELEMETRY & SIMULATOR TICKER (STANDALONE ONLY)
 // ==========================================
 
-setInterval(() => {
-  if (!CLUSTER_STATE.simulatorRunning) return;
+function startBackgroundTicker() {
+  setInterval(() => {
+    if (!CLUSTER_STATE.simulatorRunning) return;
 
-  // Jitter velocity
-  const jitter = Math.floor(Math.random() * 120) - 60;
-  CLUSTER_STATE.telemetry.ingressRate = Math.max(900, Math.min(2800, CLUSTER_STATE.telemetry.ingressRate + jitter));
-  CLUSTER_STATE.telemetry.egressRate = Math.round(CLUSTER_STATE.telemetry.ingressRate * (1.9 + Math.random() * 0.2));
-  CLUSTER_STATE.telemetry.latencyMs = +(2.8 + Math.random() * 2.2).toFixed(2);
+    // Jitter velocity
+    const jitter = Math.floor(Math.random() * 120) - 60;
+    CLUSTER_STATE.telemetry.ingressRate = Math.max(900, Math.min(2800, CLUSTER_STATE.telemetry.ingressRate + jitter));
+    CLUSTER_STATE.telemetry.egressRate = Math.round(CLUSTER_STATE.telemetry.ingressRate * (1.9 + Math.random() * 0.2));
+    CLUSTER_STATE.telemetry.latencyMs = +(2.8 + Math.random() * 2.2).toFixed(2);
 
-  // Subtle broker load variation
-  CLUSTER_STATE.brokers.forEach(b => {
-    const d = Math.floor(Math.random() * 5) - 2;
-    b.cpu = Math.max(12, Math.min(85, b.cpu + d));
-  });
+    // Subtle broker load variation
+    CLUSTER_STATE.brokers.forEach(b => {
+      const d = Math.floor(Math.random() * 5) - 2;
+      b.cpu = Math.max(12, Math.min(85, b.cpu + d));
+    });
 
-  // Periodically ingest simulated event (60% chance every second)
-  if (Math.random() > 0.4) {
-    const sample = SAMPLE_GENERATORS[Math.floor(Math.random() * SAMPLE_GENERATORS.length)]();
-    try {
-      produceKafkaRecord(sample.topic, sample.key, sample.payload);
-    } catch (e) {}
-  }
+    // Periodically ingest simulated event (60% chance every second)
+    if (Math.random() > 0.4) {
+      const sample = SAMPLE_GENERATORS[Math.floor(Math.random() * SAMPLE_GENERATORS.length)]();
+      try {
+        produceKafkaRecord(sample.topic, sample.key, sample.payload);
+      } catch (e) {}
+    }
 
-  // Broadcast telemetry snapshot
-  broadcastWebSocket({
-    type: 'TELEMETRY_TICK',
-    telemetry: CLUSTER_STATE.telemetry,
-    brokers: CLUSTER_STATE.brokers
-  });
-}, 1000);
+    // Broadcast telemetry snapshot
+    broadcastWebSocket({
+      type: 'TELEMETRY_TICK',
+      telemetry: CLUSTER_STATE.telemetry,
+      brokers: CLUSTER_STATE.brokers
+    });
+  }, 1000);
+}
 
 // ==========================================
 // 6. START SERVER & SERVERLESS EXPORT
 // ==========================================
 
 if (require.main === module) {
+  startBackgroundTicker();
   server.listen(PORT, () => {
     console.log('================================================================');
     console.log(`🚀 Amazon MSK Event Streaming Backend & Web Console Started!`);
